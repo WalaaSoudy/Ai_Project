@@ -3,6 +3,7 @@ import numpy as nump
 import random
 import pygame
 import math
+from option import Option
 
 PURPLE = (148, 19, 165)
 BLACK = (0, 0, 0)
@@ -107,6 +108,53 @@ def miniMax(matrix, dep, maximixingAgent):
                 cl = col
         return cl, val
 
+def miniMaxByAlphaBeta(matrix, dep, alpha, beta, maximixingAgent):
+    valid_locations = getEmptyPlaces(matrix)
+    endState = (len(getEmptyPlaces(matrix)) == 0 or isWinner(matrix, AI_1_PIECE) or isWinner(matrix, AI_2_PIECE))
+    if dep == 0 or endState:
+        if endState:
+            if isWinner(matrix, AI_2_PIECE):
+                return (None, math.inf)
+            elif isWinner(matrix, AI_1_PIECE):
+                return (None, -math.inf)
+            else:
+                return (None, 0)
+        else:
+            return (None, heuristicFunction(matrix, AI_2_PIECE))
+    if maximixingAgent:
+        val = -math.inf
+        cl = random.choice(valid_locations)
+        for col in valid_locations:
+            row = getNextEmptyIndex(matrix, col)
+            matrixCopy = matrix.copy()
+            matrixCopy[row][col] = AI_2_PIECE
+
+            _,new_score = miniMaxByAlphaBeta(matrixCopy, dep - 1, alpha, beta, False)
+            if new_score > val:
+                val = new_score
+                cl = col
+            alpha = max(alpha, val)
+            if alpha >= beta:
+                break
+        return cl, val
+
+    else:
+        val = math.inf
+        cl = random.choice(valid_locations)
+        for col in valid_locations:
+            row = getNextEmptyIndex(matrix, col)
+            matrixCopy = matrix.copy()
+            matrixCopy[row][col] = AI_1_PIECE
+
+            _,new_score = miniMaxByAlphaBeta(matrixCopy, dep - 1, alpha, beta, True)
+            if new_score < val:
+                val = new_score
+                cl = col
+            beta = min(beta, val)
+            if alpha >= beta:
+                break
+        return cl, val
+
 
 def heuristicFunction(matrix, piec):
     tot_score = 0
@@ -168,6 +216,83 @@ def calcMoveScore(arr, piece):
 
     return tot_score
 
+def MiniMaxByAlphaBetaGUI():
+    flag = True
+    Depth = 0
+    while flag:
+        GUI.fill(WHITEBLUE)
+        menu = FONT.render("Difficulty level ", 1, BLACK)
+        mouse = pygame.mouse.get_pos()
+
+        MENU_RECT = menu.get_rect(center=(290, 100))
+
+        Option_1 = Option(pos=(300, 200), input="Easy", font=get_font(30),
+                          color=PINKK,
+                          hover_color=GREY)
+        Option_2 = Option(pos=(300, 270), input="Medium",
+                          font=get_font(30), color=PINKK,
+                          hover_color=GREY)
+
+        Option_3 = Option(pos=(300, 340), input="Hard",
+                          font=get_font(30), color=PINKK,
+                          hover_color=GREY)
+
+        GUI.blit(menu, MENU_RECT)
+        for option in [Option_1, Option_2, Option_3]:
+            option.doHover(mouse)
+            option.update(GUI)
+
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if Option_1.displayInput(mouse):
+                    Depth = 1
+                elif Option_2.displayInput(mouse):
+                    Depth = 3
+                elif Option_3.displayInput(mouse):
+                    Depth = 5
+                flag = False
+
+        pygame.display.update()
+
+    role = random.randint(AI_1, AI_2)
+    gameOver = False
+    while not gameOver:
+
+        GUI.fill("white")
+
+        pygame.draw.rect(GUI, WHITEBLUE, (0, 0, WID, RECT_SIZE))
+        if role == AI_1:
+            col,_ = miniMaxByAlphaBeta(matrix, Depth, -math.inf, math.inf, True)
+            if matrix[5][col] == 1:
+                row = getNextEmptyIndex(matrix, col)
+                matrix[row][col] = AI_1_PIECE
+
+                if isWinner(matrix, AI_1_PIECE):
+                    label = FONT.render("Agent 1 is the winner.", 1, BLUE)
+                    GUI.blit(label, (120, 10))
+                    gameOver = True
+                role += 1
+                print(nump.flip(matrix, 0))
+                displayGUI(matrix)
+        time.sleep(0.4)
+        if role == AI_2 and not gameOver:
+            col,_ = miniMaxByAlphaBeta(matrix, Depth, -math.inf, math.inf, True)
+
+            if matrix[5][col] == 1:
+                row = getNextEmptyIndex(matrix, col)
+                matrix[row][col] = AI_2_PIECE
+
+                if isWinner(matrix, AI_2_PIECE):
+                    label = FONT.render("Agent 2 is the winner.", 1, PINKK)
+                    GUI.blit(label, (120, 10))
+                    gameOver = True
+                role -= 1
+                print(nump.flip(matrix, 0))
+                displayGUI(matrix)
+        time.sleep(0.4)
+        if gameOver:
+            pygame.time.wait(2000)
+        pygame.display.update()
 
 def displayGUI(matrix):
     for c in range(7):
