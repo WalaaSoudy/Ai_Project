@@ -4,15 +4,28 @@ import random
 import pygame
 import math
 
+PURPLE = (148, 19, 165)
+BLACK = (0, 0, 0)
+WHITEBLUE = (210, 240, 245)
+BLUE = (0, 0, 255)
+PINKK = (255, 20, 147)
+GREY = (128, 128, 128)
 AI_1 = 1
 AI_2 = 2
 AI_1_PIECE = 2
 AI_2_PIECE = 4
+RECT_SIZE = 90
+WID = 7 * RECT_SIZE
+HEIGHT = 7 * RECT_SIZE
+SZ = (WID, HEIGHT)
+RAD = int(RECT_SIZE / 2 - 5)  # radius
+
 
 def getNextEmptyIndex(matrix, cl):  # checks the first empty row of the selected column
     for r in range(6):
         if matrix[r][cl] == 1:
             return r
+
 
 def getEmptyPlaces(matrix):
     emptyPlaces = []
@@ -21,19 +34,20 @@ def getEmptyPlaces(matrix):
             emptyPlaces.append(cl)
     return emptyPlaces
 
+
 def isWinner(matrix, piece):
     # test horizontal
     for c in range(4):
         for r in range(6):
             if matrix[r][c] == piece and matrix[r][c + 1] == piece and matrix[r][c + 2] == piece and matrix[r][
-                c + 3] == piece:
+                    c + 3] == piece:
                 return True
 
     # test vertical
     for c in range(7):
         for r in range(3):
             if matrix[r][c] == piece and matrix[r + 1][c] == piece and matrix[r + 2][c] == piece and matrix[r + 3][
-                c] == piece:
+                    c] == piece:
                 return True
 
     # test positive diaganols
@@ -52,9 +66,11 @@ def isWinner(matrix, piece):
                         c - 3] == piece:
                 return True
 
+
 def miniMax(matrix, dep, maximixingAgent):
     valid_locations = getEmptyPlaces(matrix)
-    endState = (len(getEmptyPlaces(matrix)) == 0 or isWinner(matrix, AI_1_PIECE) or isWinner(matrix, AI_2_PIECE))
+    endState = (len(getEmptyPlaces(matrix)) == 0 or isWinner(
+        matrix, AI_1_PIECE) or isWinner(matrix, AI_2_PIECE))
     if dep == 0 or endState:
         if endState:
             if isWinner(matrix, AI_2_PIECE):
@@ -72,7 +88,7 @@ def miniMax(matrix, dep, maximixingAgent):
             row = getNextEmptyIndex(matrix, col)
             matrixCopy = matrix.copy()
             matrixCopy[row][col] = AI_2_PIECE
-            _,new_score = miniMax(matrixCopy, dep - 1, False)
+            _, new_score = miniMax(matrixCopy, dep - 1, False)
             if new_score > val:
                 val = new_score
                 cl = col
@@ -85,11 +101,12 @@ def miniMax(matrix, dep, maximixingAgent):
             row = getNextEmptyIndex(matrix, col)
             matrixCopy = matrix.copy()
             matrixCopy[row][col] = AI_1_PIECE
-            _,new_score = miniMax(matrixCopy, dep - 1, True)
+            _, new_score = miniMax(matrixCopy, dep - 1, True)
             if new_score < val:
                 val = new_score
                 cl = col
         return cl, val
+
 
 def heuristicFunction(matrix, piec):
     tot_score = 0
@@ -131,6 +148,7 @@ def heuristicFunction(matrix, piec):
             tot_score += calcMoveScore(arr, piec)
     return tot_score
 
+
 def calcMoveScore(arr, piece):
     tot_score = 0
 
@@ -149,3 +167,22 @@ def calcMoveScore(arr, piece):
         tot_score += 9
 
     return tot_score
+
+
+def displayGUI(matrix):
+    for c in range(7):
+        for r in range(6):
+            pygame.draw.rect(GUI, PURPLE, (c * RECT_SIZE, r *
+                             RECT_SIZE + RECT_SIZE, RECT_SIZE, RECT_SIZE))
+            pygame.draw.circle(GUI, WHITEBLUE, (
+                int(c * RECT_SIZE + RECT_SIZE / 2), int(r * RECT_SIZE + RECT_SIZE + RECT_SIZE / 2)), RAD)
+
+    for c in range(7):
+        for r in range(6):
+            if matrix[r][c] == AI_1_PIECE:
+                pygame.draw.circle(GUI, BLUE, (
+                    int(c * RECT_SIZE + RECT_SIZE / 2), HEIGHT - int(r * RECT_SIZE + RECT_SIZE / 2)), RAD)
+            elif matrix[r][c] == AI_2_PIECE:
+                pygame.draw.circle(GUI, PINKK, (
+                    int(c * RECT_SIZE + RECT_SIZE / 2), HEIGHT - int(r * RECT_SIZE + RECT_SIZE / 2)), RAD)
+    pygame.display.update()
