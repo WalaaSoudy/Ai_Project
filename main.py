@@ -1,3 +1,96 @@
+import time
+import numpy as nump
+import random
+import pygame
+import math
+
+AI_1 = 1
+AI_2 = 2
+AI_1_PIECE = 2
+AI_2_PIECE = 4
+
+def getNextEmptyIndex(matrix, cl):  # checks the first empty row of the selected column
+    for r in range(6):
+        if matrix[r][cl] == 1:
+            return r
+
+def getEmptyPlaces(matrix):
+    emptyPlaces = []
+    for cl in range(7):
+        if matrix[5][cl] == 1:
+            emptyPlaces.append(cl)
+    return emptyPlaces
+
+def isWinner(matrix, piece):
+    # test horizontal
+    for c in range(4):
+        for r in range(6):
+            if matrix[r][c] == piece and matrix[r][c + 1] == piece and matrix[r][c + 2] == piece and matrix[r][
+                c + 3] == piece:
+                return True
+
+    # test vertical
+    for c in range(7):
+        for r in range(3):
+            if matrix[r][c] == piece and matrix[r + 1][c] == piece and matrix[r + 2][c] == piece and matrix[r + 3][
+                c] == piece:
+                return True
+
+    # test positive diaganols
+    for c in range(6, -1, -1):
+        for r in range(5, -1, -1):
+            if matrix[r][c] == piece and matrix[r - 1][c - 1] == piece and matrix[r - 2][c - 2] == piece and \
+                    matrix[r - 3][
+                        c - 3] == piece:
+                return True
+
+    # test negative diaganols
+    for c in range(6, -1, -1):
+        for r in range(3):
+            if matrix[r][c] == piece and matrix[r + 1][c - 1] == piece and matrix[r + 2][c - 2] == piece and \
+                    matrix[r + 3][
+                        c - 3] == piece:
+                return True
+
+def miniMax(matrix, dep, maximixingAgent):
+    valid_locations = getEmptyPlaces(matrix)
+    endState = (len(getEmptyPlaces(matrix)) == 0 or isWinner(matrix, AI_1_PIECE) or isWinner(matrix, AI_2_PIECE))
+    if dep == 0 or endState:
+        if endState:
+            if isWinner(matrix, AI_2_PIECE):
+                return (None, math.inf)
+            elif isWinner(matrix, AI_1_PIECE):
+                return (None, -math.inf)
+            else:
+                return (None, 0)
+        else:
+            return (None, heuristicFunction(matrix, AI_2_PIECE))
+    if maximixingAgent:
+        val = -math.inf
+        cl = random.choice(valid_locations)
+        for col in valid_locations:
+            row = getNextEmptyIndex(matrix, col)
+            matrixCopy = matrix.copy()
+            matrixCopy[row][col] = AI_2_PIECE
+            _,new_score = miniMax(matrixCopy, dep - 1, False)
+            if new_score > val:
+                val = new_score
+                cl = col
+        return cl, val
+
+    else:
+        val = math.inf
+        cl = random.choice(valid_locations)
+        for col in valid_locations:
+            row = getNextEmptyIndex(matrix, col)
+            matrixCopy = matrix.copy()
+            matrixCopy[row][col] = AI_1_PIECE
+            _,new_score = miniMax(matrixCopy, dep - 1, True)
+            if new_score < val:
+                val = new_score
+                cl = col
+        return cl, val
+
 def heuristicFunction(matrix, piec):
     tot_score = 0
     # positive diagonal move
