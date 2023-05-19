@@ -311,3 +311,118 @@ def displayGUI(matrix):
                 pygame.draw.circle(GUI, PINKK, (
                     int(c * RECT_SIZE + RECT_SIZE / 2), HEIGHT - int(r * RECT_SIZE + RECT_SIZE / 2)), RAD)
     pygame.display.update()
+def MiniMaxGUI():
+    flag = True
+    Depth=0
+    while flag:
+        GUI.fill(WHITEBLUE)
+        menu = FONT.render("Difficulty level ", 1, BLACK)
+        mouse = pygame.mouse.get_pos()
+
+        MENU_RECT = menu.get_rect(center=(290, 100))
+
+        Option_1 = Option(pos=(300, 200), input="Easy", font=get_font(25),
+                          color=PINKK,
+                          hover_color=GREY)
+        Option_2 = Option(pos=(300, 270), input="Medium",
+                          font=get_font(24), color=PINKK,
+                          hover_color=GREY)
+
+        Option_3 = Option(pos=(300, 340), input="Hard",
+                          font=get_font(24), color=PINKK,
+                          hover_color=GREY)
+
+        GUI.blit(menu, MENU_RECT)
+        for option in [Option_1, Option_2,Option_3]:
+            option.doHover(mouse)
+            option.update(GUI)
+
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if Option_1.displayInput(mouse):
+                    Depth=1
+                elif Option_2.displayInput(mouse):
+                    Depth = 3
+                elif Option_3.displayInput(mouse):
+                    Depth=5
+                flag = False
+
+        pygame.display.update()
+
+    role = random.randint(AI_1, AI_2)
+    gameOver = False
+    while not gameOver:
+
+        GUI.fill("white")
+        pygame.draw.rect(GUI, WHITEBLUE, (0, 0, WID, RECT_SIZE))
+        if role == AI_1:
+            col,_ = miniMax(matrix, Depth, True)
+            if matrix[5][col] == 1:
+                row = getNextEmptyIndex(matrix, col)
+                matrix[row][col] = AI_1_PIECE
+                if isWinner(matrix, AI_1_PIECE):
+                    label = FONT.render("Agent 1 is the winner.", 1, BLUE)
+                    GUI.blit(label, (120, 10))
+                    gameOver = True
+                role += 1
+                print(nump.flip(matrix, 0))
+                displayGUI(matrix)
+        time.sleep(0.4)
+        if role == AI_2 and not gameOver:
+            col,_ = miniMax(matrix, Depth, True)
+
+            if matrix[5][col] == 1:
+                row = getNextEmptyIndex(matrix, col)
+                matrix[row][col] = AI_2_PIECE
+
+                if isWinner(matrix, AI_2_PIECE):
+                    label = FONT.render("Agent 2 is the winner.", 1, PINKK)
+                    GUI.blit(label, (120, 10))
+                    gameOver = True
+                role -= 1
+                print(nump.flip(matrix, 0))
+                displayGUI(matrix)
+        time.sleep(0.4)
+
+        if gameOver:
+            pygame.time.wait(2000)
+        pygame.display.update()
+pygame.init()
+matrix = nump.ones((6, 7))
+print(nump.flip(matrix, 0))
+GUI = pygame.display.set_mode(SZ)
+FONT = pygame.font.SysFont("Georgia", 50)
+
+def get_font(size):
+    return pygame.font.SysFont("Georgia", size)
+def main_menu():
+    flag = True
+    while flag:
+        GUI.fill(WHITEBLUE)
+        menu = FONT.render("Main Menu", 1, BLACK)
+        mouse = pygame.mouse.get_pos()
+
+        MENU_RECT = menu.get_rect(center=(290, 100))
+
+        Option_1 = Option(pos=(290, 200), input="MiniMax Algorithm", font=get_font(25),
+                          color=PINKK,
+                          hover_color=GREY)
+        Option_2 = Option(pos=(320, 300), input="MiniMax By AlphaBeta Algorithm",
+                          font=get_font(24), color=PINKK,
+                          hover_color=GREY)
+
+        GUI.blit(menu,MENU_RECT)
+        for option in [Option_1, Option_2]:
+            option.doHover(mouse)
+            option.update(GUI)
+
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if Option_1.displayInput(mouse):
+                    MiniMaxGUI()
+                elif Option_2.displayInput(mouse):
+                    MiniMaxByAlphaBetaGUI()
+                flag = False
+
+        pygame.display.update()
+main_menu()
